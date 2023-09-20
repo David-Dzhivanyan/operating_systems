@@ -1,6 +1,7 @@
-#include <iostream>
-#include <windows.h>
 #include <conio.h>
+#include <windows.h>
+
+#include <iostream>
 using namespace std;
 
 int main() {
@@ -8,7 +9,6 @@ int main() {
     memory.dwLength = sizeof(memory);
 
     while (!_kbhit() || _getch() != 'q') {
-
         GlobalMemoryStatusEx(&memory);
 
         cout << "Memory load: " << memory.dwMemoryLoad << "%" << endl;

@@ -1,41 +1,47 @@
-#include <iostream>
 #include <windows.h>
+
+#include <iostream>
 using namespace std;
 
 int main() {
-
     SYSTEM_INFO sys_info;
     GetSystemInfo(&sys_info);
-    DWORD page_size = sys_info.dwPageSize; //получаю информацию о размере виртуальной страницы в моей системе
+    DWORD page_size = sys_info.dwPageSize;  //получаю информацию о размере виртуальной страницы в моей системе
 
     INT num_pages;
-    cin >> num_pages; //ввожу количество страниц
+    cin >> num_pages;  //ввожу количество страниц
 
-    DWORD total_size = num_pages * page_size; //считаю общее число бит
+    DWORD total_size = num_pages * page_size;  //считаю общее число бит
 
-    LPVOID reserved_memory = VirtualAlloc(nullptr, total_size, MEM_RESERVE, PAGE_READWRITE); //резервирую виртуальную память
+    LPVOID reserved_memory =
+        VirtualAlloc(nullptr, total_size, MEM_RESERVE, PAGE_READWRITE);  //резервирую виртуальную память
 
     INT start_page;
     INT count_page;
-    cin >> count_page >> start_page; //ввожу уоличество страниц и с какой начать
+    cin >> count_page >> start_page;  //ввожу уоличество страниц и с какой начать
 
     DWORD offset = start_page * page_size;
     DWORD offset_counted = page_size * count_page;
-    LPVOID commit_ptr = &reserved_memory + offset; //считаю отступ, размер в битах и указатель с какого начать комитить
+    LPVOID commit_ptr =
+        &reserved_memory + offset;  //считаю отступ, размер в битах и указатель с какого начать комитить
 
-    LPVOID committed_memory = VirtualAlloc(commit_ptr, offset_counted, MEM_COMMIT, PAGE_READWRITE); //резервирую физ. память
+    LPVOID committed_memory =
+        VirtualAlloc(commit_ptr, offset_counted, MEM_COMMIT, PAGE_READWRITE);  //резервирую физ. память
 
-    LPVOID add_ptr = &reserved_memory + total_size; //устанавливаю указатель на область сразу за выделенной виртуальной памятью
-    LPVOID add_memory = VirtualAlloc(add_ptr, page_size, MEM_COMMIT, PAGE_READONLY); //резервирую физ. память для новой страницы
+    LPVOID add_ptr = &reserved_memory +
+                     total_size;  //устанавливаю указатель на область сразу за выделенной виртуальной памятью
+    LPVOID add_memory = VirtualAlloc(add_ptr, page_size, MEM_COMMIT,
+                                     PAGE_READONLY);  //резервирую физ. память для новой страницы
 
-    INT arr[] = { 1, 2, 3, 4, 5 };
-    size_t size_arr = sizeof(arr); //считаю размер массива в битах
-    errno_t error = memcpy_s(committed_memory, size_arr, arr, size_arr); // копирую массив в выделенную память
+    INT arr[] = {1, 2, 3, 4, 5};
+    size_t size_arr = sizeof(arr);  //считаю размер массива в битах
+    errno_t error =
+        memcpy_s(committed_memory, size_arr, arr, size_arr);  // копирую массив в выделенную память
 
     if (reserved_memory != nullptr && committed_memory != nullptr && error == 0 && add_memory != nullptr) {
-
         MEMORY_BASIC_INFORMATION memory_info;
-        VirtualQuery(committed_memory, &memory_info, sizeof(memory_info)); //получаем информацию о выделенной памяти
+        VirtualQuery(committed_memory, &memory_info,
+                     sizeof(memory_info));  //получаем информацию о выделенной памяти
 
         cout << "State commit: " << memory_info.State << endl;
         cout << "Protect commit: " << memory_info.Protect << endl;
@@ -52,21 +58,25 @@ int main() {
         cout << "State after virtual: " << memory_info.State << endl;
         cout << "Protect after virtual: " << memory_info.Protect << endl;
 
-        INT* copied_array = static_cast<int*>(committed_memory); //преобразую указатель на void в указатель на массив
+        INT* copied_array =
+            static_cast<int*>(committed_memory);  //преобразую указатель на void в указатель на массив
         INT count = size(arr);
-        cout << "Reserved address: " << reserved_memory << "\nCommitted address: " <<  committed_memory << "\nAdd address: " <<  add_memory << endl;
+        cout << "Reserved address: " << reserved_memory << "\nCommitted address: " << committed_memory
+             << "\nAdd address: " << add_memory << endl;
         for (int i = 0; i < count; i++) {
             cout << copied_array[i] << " ";
         }
         cout << endl;
-        
+
         INT decommit_start_page;
         INT decommit_count_page;
-        cin >> decommit_count_page >> decommit_start_page; //ввожу уоличество страниц и с какой начать
+        cin >> decommit_count_page >> decommit_start_page;  //ввожу уоличество страниц и с какой начать
 
         DWORD decommit_offset = decommit_start_page * page_size;
         DWORD decommit_offset_counted = page_size * decommit_count_page;
-        LPVOID decommit_commit_ptr = &reserved_memory + decommit_offset; //считаю отступ, размер в битах и указатель с какого начать комитить
+        LPVOID decommit_commit_ptr =
+            &reserved_memory +
+            decommit_offset;  //считаю отступ, размер в битах и указатель с какого начать комитить
 
         VirtualFree(decommit_commit_ptr, decommit_offset_counted, MEM_DECOMMIT);
 
@@ -75,7 +85,7 @@ int main() {
         cout << "State decommit: " << memory_info.State << endl;
         cout << "Protect decommit: " << memory_info.Protect << endl;
 
-        VirtualFree(committed_memory, 0, MEM_RELEASE); //отчищаю память
+        VirtualFree(committed_memory, 0, MEM_RELEASE);  //отчищаю память
         VirtualFree(reserved_memory, 0, MEM_RELEASE);
     } else {
         cout << "n/a" << endl;
@@ -83,4 +93,3 @@ int main() {
 
     return 0;
 }
-
